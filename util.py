@@ -7,6 +7,21 @@ import logging
 
 DATA_PATH = '.\\data\\'
 
+# http://stackoverflow.com/questions/36932/whats-the-best-way-to-implement-an-enum-in-python
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    reverse = dict((value, key) for key, value in enums.iteritems())
+    enums['reverse_mapping'] = reverse
+    return type('Enum', (), enums)
+
+def flexfilter(items, key, values):
+	if values is None:
+		return items
+	if type(values) is not list:
+		values = [values]
+	# TODO: use zip to handle multiple k/v pairs
+	return filter(lambda item: getattr(item, key, None) in values, items)
+
 def write_to_file(filename, content, path=DATA_PATH):
 	location = path + filename
 	logging.debug('Writing to file: {}'.format(location))
