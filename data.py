@@ -3,6 +3,7 @@ from util import *
 import logging
 import time
 from datetime import datetime
+import itertools as it
 
 class Quote(object):
 	def __init__(self, d, o, h, l, c, v, a):
@@ -24,6 +25,8 @@ class Cube(object):
 	'''symbol -> key -> date -> value'''
 	def __init__(self):
 		self.dates = []
+		self.symbols = []
+		self.keys = []
 		self.data = {}
 	
 	def add_quote(self, symbol, quote):
@@ -37,12 +40,24 @@ class Cube(object):
 	def add(self, date, symbol, key, value):
 		if date not in self.dates:
 			self.dates.append(date)
+		if symbol not in self.symbols:
+			self.symbols.append(symbol)
+		if key not in self.keys:
+			self.keys.append(key)
 		if symbol not in self.data:
 			self.data[symbol] = {}
 		if key not in self.data[symbol]:
 			self.data[symbol][key] = {}
 		if date not in self.data[symbol][key]:
 			self.data[symbol][key][date] = value
+			
+	def write_to_csv(self, location):
+		headings = list(it.product(self.symbols, self.keys))
+		out = 'date,' + ','.join(['_'.join(heading) for heading in headings])		
+		for dt in sorted(self.dates):
+			out += '\n' + datetime.strftime(dt, '%Y-%m-%d') + ',' + \
+				','.join([str(self.data[symbol][key][dt]) for symbol, key in headings])			
+		write_to_file(location, out)
 		
 def load(symbols, start, end):		
 	if type(symbols) is str:

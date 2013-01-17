@@ -5,9 +5,11 @@ import pprint
 from positions import *
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+data.load(['GOOG', 'YHOO'], '20120101', '20120131').write_to_csv('test.csv')
+
 #pp = pprint.PrettyPrinter(indent=4)
 #pp.pprint(data.load(['GOOG', 'YHOO'], '20120101', '20120131').data)
-
+'''
 oms = OMS()
 
 t1 = Transaction('GOOG', date(2012, 1, 1), 10, 100)
@@ -24,3 +26,4 @@ oms.blotter.add(t5)
 
 for t in oms.blotter.all('IBM', start=date(2012, 1, 1), end=date(2012, 3, 2)):
 	print t
+'''
