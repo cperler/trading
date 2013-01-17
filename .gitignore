@@ -1,0 +1,7 @@
+*.pyc
+*.pyo
+*.log
+passwords.py
+.project
+.pydevproject
+.settings
