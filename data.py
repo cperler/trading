@@ -60,10 +60,13 @@ class Cube(object):
 				','.join([str(self.data[(symbol, key)][dt]) for symbol, key in headings])			
 		write_to_file(location, out)
 		
+	def get_dates(self):
+		return sorted(self.dates)
+		
 	def pretty_print(self):
 		pp = pprint.PrettyPrinter(indent=4)
 		pp.pprint(self.data)
-		
+
 def load(symbols, start, end):		
 	if type(symbols) is str:
 		symbols = [symbols]

@@ -3,13 +3,13 @@ import data
 import logging
 import pprint
 from positions import *
+from algorithm import Algorithm
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-#cube = data.load(['GOOG', 'YHOO'], '20120101', '20120131')
+cube = data.load(['GOOG', 'YHOO'], '20120101', '20120131')
 #cube.write_to_csv('test.csv')
 #cube.pretty_print()
-
-
 
 oms = OMS()
 
@@ -30,3 +30,5 @@ for t in oms.blotter.all():
 	
 for t in oms.portfolio.all():
 	print t
+	
+Algorithm(['GOOG', 'IBM'], '20120101', '20120131').run()
