@@ -5,11 +5,12 @@ import pprint
 from positions import *
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-data.load(['GOOG', 'YHOO'], '20120101', '20120131').write_to_csv('test.csv')
+#cube = data.load(['GOOG', 'YHOO'], '20120101', '20120131')
+#cube.write_to_csv('test.csv')
+#cube.pretty_print()
 
-#pp = pprint.PrettyPrinter(indent=4)
-#pp.pprint(data.load(['GOOG', 'YHOO'], '20120101', '20120131').data)
-'''
+
+
 oms = OMS()
 
 t1 = Transaction('GOOG', date(2012, 1, 1), 10, 100)
@@ -18,12 +19,14 @@ t3 = Transaction('GOOG', date(2012, 10, 1), 50, 500)
 t4 = Transaction('IBM', date(2012, 4, 1), -5, 50)
 t5 = Transaction('IBM', date(2012, 11, 1), 5, 35)
 
-oms.blotter.add(t1)
-oms.blotter.add(t2)
-oms.blotter.add(t3)
-oms.blotter.add(t4)
-oms.blotter.add(t5)
+oms.add(t1)
+oms.add(t2)
+oms.add(t3)
+oms.add(t4)
+oms.add(t5)
 
-for t in oms.blotter.all('IBM', start=date(2012, 1, 1), end=date(2012, 3, 2)):
+for t in oms.blotter.all():
 	print t
-'''
+	
+for t in oms.portfolio.all():
+	print t

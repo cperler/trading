@@ -4,6 +4,7 @@ import logging
 import time
 from datetime import datetime
 import itertools as it
+import pprint
 
 class Quote(object):
 	def __init__(self, d, o, h, l, c, v, a):
@@ -44,20 +45,24 @@ class Cube(object):
 			self.symbols.append(symbol)
 		if key not in self.keys:
 			self.keys.append(key)
-		if symbol not in self.data:
-			self.data[symbol] = {}
-		if key not in self.data[symbol]:
-			self.data[symbol][key] = {}
-		if date not in self.data[symbol][key]:
-			self.data[symbol][key][date] = value
+			
+		data_key = (symbol, key)
+		if data_key not in self.data:
+			self.data[data_key] = {}		
+		if date not in self.data[data_key]:
+			self.data[data_key][date] = value
 			
 	def write_to_csv(self, location):
 		headings = list(it.product(self.symbols, self.keys))
-		out = 'date,' + ','.join(['_'.join(heading) for heading in headings])		
+		out = 'date,' + ','.join(['_'.join(heading) for heading in headings])
 		for dt in sorted(self.dates):
 			out += '\n' + datetime.strftime(dt, '%Y-%m-%d') + ',' + \
-				','.join([str(self.data[symbol][key][dt]) for symbol, key in headings])			
+				','.join([str(self.data[(symbol, key)][dt]) for symbol, key in headings])			
 		write_to_file(location, out)
+		
+	def pretty_print(self):
+		pp = pprint.PrettyPrinter(indent=4)
+		pp.pprint(self.data)
 		
 def load(symbols, start, end):		
 	if type(symbols) is str:
@@ -69,9 +74,9 @@ def load(symbols, start, end):
 		filename = '{}_{}_{}.pkl'.format(symbol, start, end)
 		if file_exists(filename):
 			data = pickle_load(filename)
-		
-		data = ystockquote.get_historical_prices(symbol, start, end)
-		pickle_it(filename, data)
+		else:
+			data = ystockquote.get_historical_prices(symbol, start, end)
+			pickle_it(filename, data)
 		
 		for line in data[1:]:
 			quote = Quote(*line)

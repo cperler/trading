@@ -78,20 +78,24 @@ class Position(object):
  
 class Portfolio(object):
 	def __init__(self):
-		self.positions = defaultdict(list)
+		self.positions = {}
    
-	def add(self, txn, position=None):
-		if position is None:
-			position = self.positions[txn.symbol]
-		position.append(txn)
+	def add(self, txn):
+		if txn.symbol not in self.positions:
+			self.positions[txn.symbol] = Position(txn.symbol)
+		self.positions[txn.symbol].add(txn)
 				   
 	def all(self, only_open=False, only_closed=False):
-		return [position for position in self.positions.items() if
-			~(only_open or only_closed) or
+		return [position for _, position in self.positions.items() if
+			not(only_open or only_closed) or
 			(only_open and position.is_open()) or
-			(only_closed and ~position.is_open())]
+			(only_closed and not position.is_open())]
                                                
 class OMS(object):
 	def __init__(self):
 		self.blotter = Blotter()
 		self.portfolio = Portfolio()
+		
+	def add(self, txn):
+		self.blotter.add(txn)
+		self.portfolio.add(txn)
