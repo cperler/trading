@@ -8,6 +8,13 @@ class Indicator(object):
 	def calculate(self):
 		pass
 		
+	def get_values(self):
+		dates = self.get_dates()
+		values = []
+		for dt in dates:
+			values.append(self.value[dt])
+		return values
+		
 class SMA(Indicator):
 	def __init__(self, **kwargs):
 		super(SMA, self).__init__(kwargs)
