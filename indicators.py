@@ -19,10 +19,10 @@ class SMA(Indicator):
 		
 	def calculate(self):	
 		sorted_dates = self.get_dates()
-		
+
 		_sma = {}
 		for i in range(0, min(len(self.series), self.period-1)):		
 			_sma[sorted_dates[i]] = None		
 		for i in range(self.period-1, len(self.series)):
 			_sma[sorted_dates[i]] = sum([self.series[a] for a in sorted_dates[i-self.period+1:i+1]]) / self.period
-		return _sma
+		self.value = _sma

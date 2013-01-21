@@ -7,6 +7,11 @@ class Algorithm(object):
 		self.symbols = symbols
 		self.start_date = start_date
 		self.end_date = end_date
+		self.indicators = []
+		
+	def setup_indicators(self):
+		for indicator in self.indicators:
+			indicator.calculate()
 	
 	def pre_run(self):
 		pass
@@ -19,7 +24,8 @@ class Algorithm(object):
 	
 	def run(self):
 		self.cube = data.load(self.symbols, self.start_date, self.end_date)
-		self.pre_run()
+		self.pre_run()		
+		self.setup_indicators()
 		for dt in self.cube.get_dates():
 			step_data = {}
 			symbols = []

@@ -71,6 +71,12 @@ class Cube(object):
 	def get_dates(self):
 		return sorted(self.dates)
 		
+	def get_values(self, symbol, key):
+		values = []
+		for dt in self.get_dates():
+			values.append(self.data[(symbol, key)][dt])
+		return values
+		
 	def pretty_print(self):
 		pp = pprint.PrettyPrinter(indent=4)
 		pp.pprint(self.data)
