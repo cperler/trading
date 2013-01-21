@@ -52,12 +52,20 @@ class Cube(object):
 		if date not in self.data[data_key]:
 			self.data[data_key][date] = value
 			
-	def write_to_csv(self, location):
+	def write_to_csv(self, location, extra_series = None):
 		headings = list(it.product(self.symbols, self.keys))
+				
 		out = 'date,' + ','.join(['_'.join(heading) for heading in headings])
+		if extra_series is not None:
+			for series in extra_series:
+				out += ',' + series['name']
+				
 		for dt in sorted(self.dates):
 			out += '\n' + datetime.strftime(dt, '%Y-%m-%d') + ',' + \
-				','.join([str(self.data[(symbol, key)][dt]) for symbol, key in headings])			
+				','.join([str(self.data[(symbol, key)][dt]) for symbol, key in headings])
+			if extra_series is not None:
+				for series in extra_series:
+					out += ',' + str(series['data'][dt])
 		write_to_file(location, out)
 		
 	def get_dates(self):

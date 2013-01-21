@@ -4,6 +4,7 @@ import logging
 import pprint
 from positions import *
 from algorithm import Algorithm
+from indicators import *
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -30,5 +31,20 @@ for t in oms.blotter.all():
 	
 for t in oms.portfolio.all():
 	print t
-	
-Algorithm(['GOOG', 'IBM'], '20120101', '20120131').run()
+ 	
+class SMATest(Algorithm):
+	def pre_run(self):
+		self.sma5 = SMA(series=self.cube.data[('GOOG', 'adjclose')], period=5).calculate()
+		
+	def handle_data(self, dt, symbols, keys, data):
+		for symbol in symbols:
+			for key in keys:
+				pass #print dt, symbol, key, data[(symbol, key)]
+
+	def post_run(self):
+		sma = {'name': 'GOOG_SMA_5', 'data' : self.sma5 }
+		extra_series = []
+		extra_series.append(sma)
+		self.cube.write_to_csv('test.csv', extra_series)
+		
+SMATest('GOOG', '20120101', '20120131').run()
