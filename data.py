@@ -71,6 +71,11 @@ class Cube(object):
 	def get_dates(self):
 		return sorted(self.dates)
 		
+	def go_back(self, dt, num_days):
+		dates = self.get_dates()
+		index_of = dates.index(dt)
+		return dates[max(0, index_of - num_days)]
+		
 	def get_values(self, symbol, key):
 		values = []
 		for dt in self.get_dates():

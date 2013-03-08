@@ -40,9 +40,16 @@ class Blotter(object):
 	def add(self, txn):
 		self.txns.append(txn)
 				   
-	def all(self, symbols=None, start=None, end=None):		
+	def all(self, symbols=None, start=None, end=None):
 		return Transaction.sort([txn for txn in flexfilter(self.txns, 'symbol', symbols) 
 			if (start is None or txn.dt >= start) and (end is None or txn.dt < end)])
+	
+	def calculate_pandl(self, symbols=None):
+		transactions = self.all(symbols=symbols)
+		pandl = 0.0
+		for t in transactions:
+			pandl += t.px * -t.qty
+		return pandl
                                
 class Position(object):
 	def __init__(self, symbol):

@@ -1,66 +1,80 @@
-from datetime import date
-import data
 import logging
-import pprint
 from positions import *
 from algorithm import Algorithm
 from indicators import *
-import plot
-import matplotlib.dates as mdates
+import pprint
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+stocks = ["MMM","AA","MO","AXP","AIG","T","BA","CAT","C","KO","DD","XOM","GE","GM","HPQ","HD","HON","IBM","INTC","JNJ","JPM","MCD","MRK","MSFT","PFE","PG","UTX","VZ","WMT","DIS"]
+stocks = ['SPY']
 
-cube = data.load(['GOOG', 'YHOO'], '20120101', '20120131')
-#cube.write_to_csv('test.csv')
-#cube.pretty_print()
-
-oms = OMS()
-
-t1 = Transaction('GOOG', date(2012, 1, 1), 10, 100)
-t2 = Transaction('GOOG', date(2012, 3, 1), 15, 150)
-t3 = Transaction('GOOG', date(2012, 10, 1), 50, 500)
-t4 = Transaction('IBM', date(2012, 4, 1), -5, 50)
-t5 = Transaction('IBM', date(2012, 11, 1), 5, 35)
-
-oms.add(t1)
-oms.add(t2)
-oms.add(t3)
-oms.add(t4)
-oms.add(t5)
-
-for t in oms.blotter.all():
-	print t
-	
-for t in oms.portfolio.all():
-	print t
- 	
 class SMATest(Algorithm):
 	def __init__(self, symbols, start_date, end_date):
 		super(SMATest, self).__init__(symbols, start_date, end_date)		
 		
 	def pre_run(self):
 		super(SMATest, self).pre_run()
-		self.sma50 = SMA(series=self.cube.data[('GOOG', 'adjclose')], period=50)
-		self.sma200 = SMA(series=self.cube.data[('GOOG', 'adjclose')], period=200)
-		self.indicators.append(self.sma50)
-		self.indicators.append(self.sma200)
+
+		for symbol in self.symbols:
+			close_series = self.cube.data[(symbol, 'adjclose')]
+			self.add_indicator(SMA('ShortSMA-' + symbol, close_series, 5))
+			self.add_indicator(SMA('LongSMA-' + symbol, close_series, 20))
+			self.add_indicator(RSMA('LongRSMA-' + symbol, close_series, 20))
+			self.add_indicator(BBandLower('BBandLower-20-' + symbol, close_series, 20, 2))
+			self.add_indicator(BBandUpper('BBandUpper-20-' + symbol, close_series, 20, 2))
+			self.add_indicator(ROC('ROC-' + symbol, self.i('LongSMA-' + symbol)))
 		
 	def handle_data(self, dt, symbols, keys, data):
+		yesterday = self.cube.go_back(dt, 1)
+
 		for symbol in symbols:
-			for key in keys:
-				pass #print dt, symbol, key, data[(symbol, key)]
+			shortsma = self.i('ShortSMA-' + symbol)
+			shortsma_yesterday = shortsma[yesterday]
+			shortsma_today = shortsma[dt]
+			longsma = self.i('LongSMA-' + symbol)
+			longsma_yesterday = longsma[yesterday]
+			longsma_today = longsma[dt]
+			bbandlower = self.i('BBandLower-20-' + symbol)
+			bbandlower_yesterday = bbandlower[yesterday]
+			bbandlower_today = bbandlower[dt]
+			roc = self.i('ROC-' + symbol)
+			roc_yesterday = roc[yesterday]
+			roc_today = roc[dt]
+			close_yesterday = self.cube.data[(symbol, 'adjclose')][yesterday]
+			px = data[(symbol, 'adjclose')]
+			
+			if roc_yesterday is not None:
+				if roc_yesterday < -0.5:
+					if symbol not in self.oms.portfolio.positions or not self.oms.portfolio.positions[symbol].is_open():						
+						self.oms.add(Transaction(symbol, dt, px, 10000.0/px))
+				elif roc_yesterday > 0.5:
+					if symbol in self.oms.portfolio.positions and self.oms.portfolio.positions[symbol].is_open():
+						self.oms.add(Transaction(symbol, dt, px, -self.oms.portfolio.positions[symbol].amount))
 
 	def post_run(self):
-		sma50 = {'name': 'GOOG_SMA_50', 'data' : self.sma50.value }
-		sma200 = {'name': 'GOOG_SMA_200', 'data' : self.sma200.value }
-		extra_series = []
-		extra_series.append(sma50)
-		extra_series.append(sma200)
-		self.cube.write_to_csv('test.csv', extra_series)
+		self.results()
+		#for symbol in self.symbols:
+		#self.plot(symbol=symbol, indicator_list=['ROC-' + symbol, 'Fixed-0']).show()
 		
-algo = SMATest('GOOG', '20100101', '20121231')
-algo.run()
+results = {}
+from plot import *
+for stock in stocks:
+	test = SMATest([stock], '20100101', '20130131')
+	test.run()
+	result = test.results()
+	results[stock] = result
 
-plot.plot_data_with_dates([algo.cube.get_dates()]*3, [algo.cube.get_values('GOOG', 'close'), algo.sma50.get_values(), algo.sma200.get_values()], 'Date', 'Px', '-', ['Open', 'SMA50', 'SMA200'], 'Graph').show()
-
-plot.plot_candles(algo.cube).show()
+	pp = pprint.PrettyPrinter(indent=4)
+	pp.pprint(results)
+	
+	plt, subplots = multi_plot_data_with_dates(test.cube.get_dates(), 
+									[[test.cube.get_values(stock, 'adjclose'), test.i('LongSMA-' + stock).as_series()],[test.i('ROC-' + stock).as_series()], [test.i('LongRSMA-' + stock).as_series()]],
+									'Date',
+									['Price','Value', 'Value'],
+									'-',
+									[['Close', 'ShortSMA'],['ROC'], ['LongRSMA']],
+									stock)
+	for t in test.oms.blotter.all(symbols=stock):
+		dt = t.dt
+		high = test.cube.data[(stock, 'high')][dt] 
+		subplots[0].annotate('BUY' if t.qty > 0 else 'SELL', xy=(dt, high*1.05), xytext=(dt, high*1.08), arrowprops=dict(facecolor='green' if t.qty > 0 else 'red', shrink=0.05))
+	plt.show()
