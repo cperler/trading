@@ -103,5 +103,4 @@ def load(symbols, start, end):
 		for line in data[1:]:
 			quote = Quote(*line)
 			cube.add_quote(symbol, quote)
-	
 	return cube

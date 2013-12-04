@@ -48,7 +48,7 @@ for period in [5]:
 			for symbol in self.symbols:
 				self.plot(symbol=symbol, indicator_list=['VWAP-' + symbol, 'BBandLower-20-' + symbol, 'BBandUpper-20-' + symbol, 'SMA-' + symbol, 'RSMA-'+ symbol, 'SSS-' + symbol, 'ROC-' + symbol]).show()
 			
-	test = SMATest([stock], '20050101', '20130131')
+	test = SMATest([stock], '20130101', '20131017')
 	test.run()
 	results[period] = test.results()
 		

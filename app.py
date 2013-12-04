@@ -22,6 +22,7 @@ class SMATest(Algorithm):
 			self.add_indicator(BBandLower('BBandLower-20-' + symbol, close_series, 20, 2))
 			self.add_indicator(BBandUpper('BBandUpper-20-' + symbol, close_series, 20, 2))
 			self.add_indicator(ROC('ROC-' + symbol, self.i('LongSMA-' + symbol)))
+			self.add_indicator(ATR('ATR-' + symbol, self.i('ATR-' + symbol)))
 		
 	def handle_data(self, dt, symbols, keys, data):
 		yesterday = self.cube.go_back(dt, 1)

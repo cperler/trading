@@ -5,3 +5,5 @@ passwords.py
 .project
 .pydevproject
 .settings
+*.csv
+*.pkl
