@@ -69,8 +69,8 @@ class EMA(SMA):
 					multiplier = (2.0 / (self.period + 1.0))
 					ema_val = ((self.series[dt] - prior_ema) * multiplier) + prior_ema
 					self.values[dt] = ema_val
-			yesterday = dt
-
+			yesterday = dt			
+			
 class StdDev(Indicator):
 	def __init__(self, name, series, period, **kwargs):
 		super(StdDev, self).__init__(name, series, **kwargs)
@@ -114,31 +114,45 @@ class ZScore(StdDev):
 					self.values[dt] = (self.series[dt] - avg) / stddev
 					
 class BBandLower(StdDev):
-	def __init__(self, name, series, period, deviations, **kwargs):
+	def __init__(self, name, series, period, deviations, ma_series, **kwargs):
 		super(BBandLower, self).__init__(name, series, period, **kwargs)
 		self.deviations = deviations
+		self.ma_series = ma_series
 		
 	def calculate(self):
 		super(BBandLower, self).calculate()
+
+		if not self.ma_series.ready:
+			self.algorithm.setup_indicator(self.ma_series)
 		
 		for dt in self.dates():
 			stddev = self.values[dt]
-			if stddev is not None:
-				self.values[dt] = self.series[dt] - (self.deviations * stddev)
+			ma_val = self.ma_series[dt]
+			if stddev is not None and ma_val is not None:
+				self.values[dt] = ma_val - (self.deviations * stddev)
+			else:
+				self.values[dt] = None
 				
 class BBandUpper(StdDev):
-	def __init__(self, name, series, period, deviations, **kwargs):
+	def __init__(self, name, series, period, deviations, ma_series, **kwargs):
 		super(BBandUpper, self).__init__(name, series, period, **kwargs)
 		self.deviations = deviations
+		self.ma_series = ma_series
 		
 	def calculate(self):
 		super(BBandUpper, self).calculate()
 		
+		if not self.ma_series.ready:
+			self.algorithm.setup_indicator(self.ma_series)
+		
 		for dt in self.dates():
 			stddev = self.values[dt]
-			if stddev is not None:
-				self.values[dt] = self.series[dt] + (self.deviations * stddev)
-		
+			ma_val = self.ma_series[dt]
+			if stddev is not None and ma_val is not None:
+				self.values[dt] = ma_val + (self.deviations * stddev)
+			else:
+				self.values[dt] = None
+				
 class ROC(Indicator):
 	def __init__(self, name, series, **kwargs):
 		super(ROC, self).__init__(name, series, **kwargs)
@@ -711,3 +725,25 @@ class ConnorsRSI(Indicator):
 			if rsi is not None and streak is not None and percent_rank is not None:
 				current = (rsi + streak + percent_rank) / 3.0
 			self.values[dt] = current
+			
+class MACD(Indicator):
+	def __init__(self, name, series, fast_ema_series, slow_ema_series, **kwargs):
+		super(MACD, self).__init__(name, series, **kwargs)
+		self.fast_ema_series = fast_ema_series
+		self.slow_ema_series = slow_ema_series
+		
+	def calculate(self):
+		super(MACD, self).calculate()
+		
+		if not self.fast_ema_series.ready:
+			self.algorithm.setup_indicator(self.fast_ema_series)
+		if not self.slow_ema_series.ready:
+			self.algorithm.setup_indicator(self.slow_ema_series)
+		
+		for dt in self.dates():
+			fast_ema = self.fast_ema_series[dt]
+			slow_ema = self.slow_ema_series[dt]
+			if fast_ema is not None and slow_ema is not None:
+				self.values[dt] = fast_ema - slow_ema
+			else:
+				self.values[dt] = None	

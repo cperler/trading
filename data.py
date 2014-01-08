@@ -99,8 +99,10 @@ def load(symbols, start, end):
 		else:
 			data = ystockquote.get_historical_prices(symbol, start, end)
 			pickle_it(filename, data)
-		
-		for line in data[1:]:
-			quote = Quote(*line)
-			cube.add_quote(symbol, quote)
+		try:
+			for line in data[1:]:
+				quote = Quote(*line)
+				cube.add_quote(symbol, quote)
+		except:
+			print 'Trouble getting data for {}'.format(symbol)
 	return cube
