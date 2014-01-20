@@ -1,8 +1,8 @@
 import logging
 from positions import *
 from algorithm import Algorithm
-from indicators import *
 from plot import *
+from indicators import *
 import pprint
 
 stocks = ['SPY', 'VXX', 
@@ -13,83 +13,60 @@ stocks = ['SPY', 'VXX',
 #dow
 'AXP','BA','CAT','CSCO','CVX','DD','DIS','GE','GS','HD','IBM','INTC','JNJ','JPM','KO','MCD','MMM','MRK','MSFT','NKE','PFE','PG','T','TRV','UNH','UTX','V','VZ','WMT','XOM']
 
-class ADXTest(Algorithm):
+class Pennant(Algorithm):
 	def __init__(self, symbols, start_date, end_date):
-		super(ADXTest, self).__init__(symbols, start_date, end_date)		
+		super(Pennant, self).__init__(symbols, start_date, end_date)				
 		self.cash = 10000
+		self.buys = {}
+		self.stops = {}
 		
 	def pre_run(self):
-		super(ADXTest, self).pre_run()
+		super(Pennant, self).pre_run()			
 
-		for symbol in self.symbols:
-			close_series = self.cube.data[(symbol, 'adjclose')]
-			self.add_indicator(EMA('EMA12-'+symbol, close_series, 12))
-			self.add_indicator(EMA('EMA26-'+symbol, close_series, 26))
-			self.add_indicator(EMA('EMA55-'+symbol, close_series, 55))
-			self.add_indicator(MACD('MACD-'+symbol, close_series, self.i('EMA12-'+symbol), self.i('EMA26-'+symbol)))
-			self.add_indicator(EMA('MACD_Signal-'+symbol, self.i('MACD-'+symbol), 9))
-		
+		for symbol in self.symbols:		
+			close_series = self.cube.data[(symbol, 'close')]
+			
+			self.add_indicator(SMA('SMA200-' + symbol, close_series, 200))			
+			self.add_indicator(SMA('SMA50-' + symbol, close_series, 50))			
+			self.add_indicator(SMA('SMA13-' + symbol, close_series, 13))			
+			self.add_indicator(SMA('SMA10-' + symbol, close_series, 10))			
+
 	def handle_data(self, dt, symbols, keys, data):
+		back20 = self.cube.go_back(dt, 20)
+		back10 = self.cube.go_back(dt, 10)
+		back5 = self.cube.go_back(dt, 5)		
+		
 		for symbol in symbols:
 			try:
-				yesterday = self.cube.go_back(dt, 1)
+				px = data[(symbol, 'close')]
+				sma200 = self.i('SMA200-'+symbol)[dt]
+				sma50 = self.i('SMA50-'+symbol)[dt]
+				sma13 = self.i('SMA13-'+symbol)[dt]
+				sma10 = self.i('SMA10-'+symbol)[dt]
+				
+				sma200_back20 = self.i('SMA200-'+symbol)[back20]
+				sma50_back10 = self.i('SMA50-'+symbol)[back10]
+				sma13_back5 = self.i('SMA13-'+symbol)[back5]
+				
+				rising_market = sma200 > sma200_back20 and sma50 > sma50_back10 and sma50 > sma200
+				
+				min_close = px
+				max_sma50 = sma50
+				for i in range(1, 6):
+					j = self.cube.go_back(dt, i)
+					min_close = min(min_close, self.cube.data[(symbol, 'close')][j])
+					max_sma50 = max(max_sma50, self.i('SMA50-'+symbol)[j])
+				
+				falling_prices = sma13 < sma13_back5 and min_close > max_sma50
+				
+				entry_condition = (px < sma10) and falling_prices and rising_market
 
-				macd_yesterday = self.i('MACD-'+symbol)[yesterday]
-				macd = self.i('MACD-'+symbol)[dt]
-				signal_yesterday = self.i('MACD_Signal-'+symbol)[dt]
-				signal = self.i('MACD_Signal-'+symbol)[dt]
-				
-				ema26 = self.i('EMA26-'+symbol)[dt]
-				ema55 = self.i('EMA55-'+symbol)[dt]
-				
-				px = data[(symbol, 'adjclose')]
-				
-				v_yesterday = None
-				v = None
-				if macd_yesterday is not None and signal_yesterday is not None:
-					v_yesterday = macd_yesterday - signal_yesterday
-					v = macd - signal
-					
-				if v_yesterday is not None:
-					if v < 2 and v > 0 and v_yesterday < 0 and v - v_yesterday > .25:
-						if dt == datetime.datetime(2014,1,17):
-							print dt, 'BUY', symbol
-						'''if symbol not in self.oms.portfolio.positions or not self.oms.portfolio.positions[symbol].is_open():
-							qty = 100 #int(self.cash / px)
-							self.oms.add(Transaction(symbol, dt, px, qty))
-							self.cash = 0
-						'''
-						
-					elif v > 0 and v < v_yesterday and v_yesterday > 0:
-						pass
-						'''if dt == datetime.datetime(2013,12,19):
-							print dt, 'SELL', symbol
-						if symbol in self.oms.portfolio.positions and self.oms.portfolio.positions[symbol].is_open():
-							gains_cash = px * self.oms.portfolio.positions[symbol].amount
-							self.cash += gains_cash
-							self.oms.add(Transaction(symbol, dt, px, -self.oms.portfolio.positions[symbol].amount))
-						'''
-						
+				if dt == datetime.datetime(2014, 1, 17):
+					if entry_condition:
+						print 'BUY', dt, symbol
 			except:
 				pass
-							
-test = ADXTest(stocks, '20120101', '20140117')
+
+test = Pennant(stocks, '20120101', '20140117')
 test.run()
 test.results()
-
-#test.write_to_csv('adx.csv', indicator_list=['TR', 'PlusDM', 'MinusDM', 'ATR', 'PlusDM14', 'MinusDM14', 'PlusDI', 'MinusDI', 'DX', 'ADX'])
-'''
-stock = stocks[0]
-plt, subplots = multi_plot_data_with_dates(test.cube.get_dates(), 
-									[[test.cube.get_values(stock, 'adjclose')],[test.i('MACD').as_series(), test.i('MACD_Signal').as_series()]],
-									'Date',
-									['Price','Value'],
-									'-',
-									[['Close'],['MACD', 'Signal']],
-									stock)
-for t in test.oms.blotter.all(symbols=stock):
-		dt = t.dt
-		high = test.cube.data[(stock, 'high')][dt] 
-		subplots[0].annotate('BUY' if t.qty > 0 else 'SELL', xy=(dt, high*1.05), xytext=(dt, high*1.08), arrowprops=dict(facecolor='green' if t.qty > 0 else 'red', shrink=0.05))
-plt.show()
-'''

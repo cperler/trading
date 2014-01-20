@@ -46,13 +46,13 @@ class BBCross(Algorithm):
 				entry_condition = prior_ema200 < prior_bb and ema200 > bb
 				exit_condition = prior_ema200 > prior_bb and ema200 < bb
 
-				if dt == datetime.datetime(2014, 1, 7):
+				if dt == datetime.datetime(2014, 1, 17):
 					if entry_condition:
 						print 'BUY', dt, symbol
 			except:
 				pass
 
-test = BBCross(stocks, '20120101', '20140107')
+test = BBCross(stocks, '20120101', '20140117')
 test.run()
 test.results()
 '''

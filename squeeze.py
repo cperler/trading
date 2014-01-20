@@ -117,7 +117,7 @@ class SqueezeAlgo(Algorithm):
 				move_stop_condition = h > prior_h or l < prior_l
 				exit_condition = rsi < prior_rsi and in_squeeze and (ha_doji or prior_ha_doji)
 
-				if dt == datetime.datetime(2014, 1, 7) and in_squeeze:			
+				if dt == datetime.datetime(2014, 1, 17) and in_squeeze:			
 					connors_rsi = self.i('ConnorsRSI-'+symbol)[dt]
 					if up_trend and rising_ha:
 						print 'BUY', dt, symbol, connors_rsi
@@ -166,7 +166,7 @@ class SqueezeAlgo(Algorithm):
 					self.stops[symbol] = prior_ha.l
 			'''
 
-test = SqueezeAlgo(stocks, '20120101', '20140107')
+test = SqueezeAlgo(stocks, '20120101', '20140117')
 test.run()
 test.results()
 
