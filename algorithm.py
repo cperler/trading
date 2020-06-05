@@ -4,11 +4,13 @@ import data
 import plot
 
 class Algorithm(object):
-	def __init__(self, symbols, start_date, end_date):
+	def __init__(self, symbols, start_date, end_date, cash=1000):
 		self.oms = OMS()
 		self.symbols = symbols
 		self.start_date = start_date
 		self.end_date = end_date
+		self.cash = cash
+		self.initial_cash = cash
 		self.indicators = {}
 		
 	def add_indicator(self, indicator):
@@ -86,7 +88,7 @@ class Algorithm(object):
 		num_series = len(indicators) + 1
 
 		date_series_list = [self.cube.get_dates()] * num_series
-		plot_series_list = [self.cube.get_values(symbol, 'adjclose')] + indicators
+		plot_series_list = [self.cube.get_values(symbol, 'close')] + indicators
 		plot_names_list = ['Close'] + indicator_names		
 		if exclude_price:
 			date_series_list = [self.cube.get_dates()] * (num_series-1)
@@ -103,7 +105,7 @@ class Algorithm(object):
 		
 		return plt
 		
-	def get_buy_and_hold(self, field='adjclose'):
+	def get_buy_and_hold(self, field='close'):
 		bh = {}
 		dates = self.cube.get_dates()
 		for symbol in self.symbols:
@@ -112,8 +114,8 @@ class Algorithm(object):
 				idx += 1
 			p1 = self.cube.data[(symbol, field)][dates[idx]]			
 			px = self.cube.data[(symbol, field)][dates[-1]]
-			v = px / p1 * 10000
-			bh[symbol] = v
+			v = px / p1 * self.initial_cash
+			bh[symbol] = v - self.initial_cash
 		return bh
 	
 	def calculate_pandl(self):
@@ -121,32 +123,32 @@ class Algorithm(object):
 		for symbol, position in self.oms.portfolio.positions.items():
 			if position.is_open():
 				dt = self.cube.get_dates()[-1]
-				px = self.cube.data[(symbol, 'adjclose')][dt]
+				px = self.cube.data[(symbol, 'close')][dt]
 				closeout += Transaction(symbol, dt, px, position.amount).cost()
 		pandl = self.oms.blotter.calculate_pandl()
 		return {'only_closed' : pandl, 'only_open' : closeout, 'total' : closeout+pandl}
 		
-	def results(self, bhfield='adjclose'):
-		print ''
-		print '-- Results for {} on symbols {} from {} to {} --'.format(self.__class__.__name__, self.symbols, self.start_date, self.end_date)
-		print ''		
-		print 'Transactions:'
+	def results(self, bhfield='close'):
+		print('')
+		print('-- Results for {} on symbols {} from {} to {} --'.format(self.__class__.__name__, self.symbols, self.start_date, self.end_date))
+		print ('')
+		print ('Transactions:')
 		transactions = list(self.oms.blotter.all())
 		for t in transactions:
-			print '\t{}'.format(t)
+			print ('\t{}'.format(t))
 		if len(transactions) == 0:
-			print '\tno transactions'
-		print ''
-		print 'Holdings:'
+			print('\tno transactions')
+		print('')
+		print('Holdings:')
 		holdings = self.oms.portfolio.all(only_open=True)
 		for p in holdings:			
-			print '\t{} (px = {})'.format(p, self.cube.data[(p.symbol, 'adjclose')][self.cube.get_dates()[-1]])
+			print('\t{} (px = {})'.format(p, self.cube.data[(p.symbol, 'close')][self.cube.get_dates()[-1]]))
 		if len(holdings) == 0:
-			print '\tno open holdings'
+			print('\tno open holdings')
 		pandl = self.calculate_pandl()
-		print 'Unrealized = {}'.format(pandl['only_open'])
-		print 'Realized = {}'.format(pandl['only_closed'])
-		print 'Total P&L = {}'.format(pandl['total'])
-		print 'B&H = {}'.format(sum([v-10000 for _, v in self.get_buy_and_hold(field=bhfield).items()]))
-		print ''
+		print('Unrealized = {}'.format(pandl['only_open']))
+		print('Realized = {}'.format(pandl['only_closed']))
+		print('Total P&L = {}'.format(pandl['total']))
+		print('B&H = {}'.format(sum([v-10000 for _, v in self.get_buy_and_hold(field=bhfield).items()])))
+		print('')
 		return {'strategy' : int(pandl['total']), 'bh' : int(sum([v for _, v in self.get_buy_and_hold().items()])-10000)}

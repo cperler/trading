@@ -17,7 +17,7 @@ for period in [5]:
 			super(SMATest, self).pre_run()			
 
 			for symbol in self.symbols:
-				close_series = self.cube.data[(symbol, 'adjclose')]
+				close_series = self.cube.data[(symbol, 'close')]
 				self.add_indicator(SMA('SMA-' + symbol, close_series, period))
 				self.add_indicator(RSMA('RSMA-' + symbol, close_series, period))
 				self.add_indicator(SMA('SSS-' + symbol, self.i('RSMA-' + symbol), period))
@@ -29,7 +29,7 @@ for period in [5]:
 		def handle_data(self, dt, symbols, keys, data):
 			for symbol in symbols:
 				vwap = self.i('VWAP-' + symbol)
-				px = data[(symbol, 'adjclose')]
+				px = data[(symbol, 'close')]
 
 				if vwap[dt] is not None:
 					if px < vwap[dt] * 1.005:
@@ -53,7 +53,7 @@ for period in [5]:
 	results[period] = test.results()
 		
 	plt, subplots = multi_plot_data_with_dates(test.cube.get_dates(), 
-		[[test.cube.get_values(stock, 'adjclose'), test.i('VWAP-' + stock).as_series(), test.i('SMA-' + stock).as_series(), test.i('BBandLower-20-' + stock).as_series(), test.i('BBandUpper-20-' + stock).as_series()],[test.i('RSMA-' + stock).as_series(), test.i('SSS-' + stock).as_series()],[test.i('ROC-' + stock).as_series()]],
+		[[test.cube.get_values(stock, 'close'), test.i('VWAP-' + stock).as_series(), test.i('SMA-' + stock).as_series(), test.i('BBandLower-20-' + stock).as_series(), test.i('BBandUpper-20-' + stock).as_series()],[test.i('RSMA-' + stock).as_series(), test.i('SSS-' + stock).as_series()],[test.i('ROC-' + stock).as_series()]],
 		'Date',
 		['Price','Value', 'Value'],
 		'-',

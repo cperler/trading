@@ -14,10 +14,10 @@ class SPYReversion(Algorithm):
 		super(SPYReversion, self).pre_run()
 
 		for symbol in self.symbols:
-			close_series = self.cube.data[(symbol, 'adjclose')]
+			close_series = self.cube.data[(symbol, 'close')]
 			high_series = self.cube.data[(symbol, 'high')]
 			low_series = self.cube.data[(symbol, 'low')]
-			self.add_indicator(ATR('ATR-' + symbol, high_series, low_series, 25))		
+			self.add_indicator(ATR('ATR-' + symbol, 25, high_series, low_series, close_series))		
 
 	def high_from_range(self, starting_dt, symbol, period):
 		high = self.cube.data[(symbol, 'high')][starting_dt]
@@ -31,7 +31,7 @@ class SPYReversion(Algorithm):
 			atr = self.i('ATR-' + symbol)			
 			atr_today = atr[dt]									# 1. 25 day average of ATR
 						
-			px = data[(symbol, 'adjclose')]
+			px = data[(symbol, 'close')]
 			high = data[(symbol, 'high')]
 			low = data[(symbol, 'low')]
 			
@@ -47,7 +47,7 @@ class SPYReversion(Algorithm):
 						self.oms.add(Transaction(symbol, dt, px, 10000.0/px))
 				else:
 					if symbol in self.oms.portfolio.positions and self.oms.portfolio.positions[symbol].is_open():
-						self.oms.add(Transaction(symbol), dt, px, self.oms.portfolio.positions[symbol].amount)
+						self.oms.add(Transaction(symbol, dt, px, self.oms.portfolio.positions[symbol].amount))
 						
 	def post_run(self):
 		self.results()

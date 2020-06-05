@@ -1,4 +1,4 @@
-import ystockquote
+import yf
 from util import *
 import logging
 import time
@@ -7,14 +7,13 @@ import itertools as it
 import pprint
 
 class Quote(object):
-	def __init__(self, d, o, h, l, c, v, a):
+	def __init__(self, d, o, h, l, c, v):
 		self.d = datetime(*(time.strptime(d, '%Y-%m-%d')[0:6]))
 		self.o = float(o)
 		self.h = float(h)
 		self.l = float(l)
 		self.c = float(c)
 		self.v = float(v)
-		self.a = float(a)
  
 	def __str__(self):
 		return '[' + datetime.strftime(self.d, '%Y-%m-%d') + '] ' + str(self.a)
@@ -36,7 +35,6 @@ class Cube(object):
 		self.add(quote.d, symbol, 'low', quote.l)
 		self.add(quote.d, symbol, 'close', quote.c)
 		self.add(quote.d, symbol, 'volume', quote.v)
-		self.add(quote.d, symbol, 'adjclose', quote.a)
 	
 	def add(self, date, symbol, key, value):
 		if date not in self.dates:
@@ -97,12 +95,19 @@ def load(symbols, start, end):
 		if file_exists(filename):
 			data = pickle_load(filename)
 		else:
-			data = ystockquote.get_historical_prices(symbol, start, end)
+			data = yf.get_historical_prices(symbol, start[:4]+'-'+start[4:6]+'-'+start[6:], end[:4]+'-'+end[4:6]+'-'+end[6:])
 			pickle_it(filename, data)
 		try:
-			for line in data[1:]:
-				quote = Quote(*line)
+			for i in range(0, len(data)):
+				d = str(data.index[i].date())
+				o = data.iloc[i].Open
+				h = data.iloc[i].High
+				l = data.iloc[i].Low
+				c = data.iloc[i].Close
+				v = data.iloc[i].Volume
+				quote = Quote(d, o, h, l, c, v)
 				cube.add_quote(symbol, quote)
-		except:
-			print 'Trouble getting data for {}'.format(symbol)
+		except Exception as e:
+			print('Trouble getting data for {}'.format(symbol))
+			print('{}'.format(e))
 	return cube

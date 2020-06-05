@@ -553,13 +553,12 @@ class AverageGain(Indicator):
 				initial_gain += gain
 				self.values[dt] = None
 			elif i == self.period-1:
-				initial_gain += gain
 				avg_gain = initial_gain / self.period
 				self.values[dt] = float(avg_gain)
 			else:
 				prior_gain = self.values[yesterday]
-				current_gain = ((prior_gain * (self.period - 1)) + gain) / self.period
-				self.values[dt] = current_gain
+				avg_gain = ((prior_gain * (self.period - 1)) + gain) / self.period
+				self.values[dt] = float(avg_gain)
 			yesterday = dt
 			
 class AverageLoss(Indicator):
@@ -582,13 +581,12 @@ class AverageLoss(Indicator):
 				initial_loss += loss
 				self.values[dt] = None
 			elif i == self.period-1:
-				initial_loss += loss
 				avg_loss = initial_loss / self.period
 				self.values[dt] = float(avg_loss)
 			else:
 				prior_loss = self.values[yesterday]
-				current_loss = ((prior_loss * (self.period - 1)) + loss) / self.period
-				self.values[dt] = current_loss
+				avg_loss = ((prior_loss * (self.period - 1)) + loss) / self.period
+				self.values[dt] = float(avg_loss)
 			yesterday = dt
 			
 class RSI(Indicator):
@@ -611,14 +609,10 @@ class RSI(Indicator):
 			ag_val = self.ag_series[dt]
 			al_val = self.al_series[dt]
 			
-			if ag_val and al_val:
-				if is_first:
-					is_first = False
-					self.values[dt] = None
-				else:
-					rs = ag_val / al_val
-					rsi = 100.0 - (100.0 / (1 + rs))
-					self.values[dt] = rsi
+			if ag_val is not None and al_val is not None:
+				rs = ag_val / al_val
+				rsi = 100.0 - (100.0 / (1 + rs))
+				self.values[dt] = rsi
 			else:			
 				self.values[dt] = None
 
@@ -747,3 +741,24 @@ class MACD(Indicator):
 				self.values[dt] = fast_ema - slow_ema
 			else:
 				self.values[dt] = None	
+
+class IBS(Indicator):
+	def __init__(self, name, open_series, close_series, high_series, low_series, **kwargs):
+		super(IBS, self).__init__(name, close_series, **kwargs)
+		self.open_series = open_series
+		self.close_series = close_series
+		self.high_series = high_series
+		self.low_series = low_series		
+	
+	def calculate(self):
+		super(IBS, self).calculate()
+	
+		dates = self.dates()
+		
+		for dt in dates:
+			o = self.open_series[dt]
+			c = self.close_series[dt]
+			h = self.high_series[dt]
+			l = self.low_series[dt]
+		
+			self.values[dt] = ((c - l) / (h - l)) * 100

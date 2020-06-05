@@ -18,7 +18,7 @@ for stock in stocks:
 				super(SMATest, self).pre_run()			
 
 				for symbol in self.symbols:
-					close_series = self.cube.data[(symbol, 'adjclose')]
+					close_series = self.cube.data[(symbol, 'close')]
 					self.add_indicator(SMA('SMA-' + symbol, close_series, period))
 					self.add_indicator(RSMA('RSMA-' + symbol, close_series, period))
 					self.add_indicator(SMA('SSS-' + symbol, self.i('RSMA-' + symbol), period))
@@ -33,8 +33,8 @@ for stock in stocks:
 					vwap = self.i('VWAP-' + symbol)
 					vwap_yesterday = vwap[yesterday]
 					vwap_today = vwap[dt]
-					px = data[(symbol, 'adjclose')]
-					px_yesterday = self.cube.data[(symbol, 'adjclose')][yesterday]
+					px = data[(symbol, 'close')]
+					px_yesterday = self.cube.data[(symbol, 'close')][yesterday]
 									
 					if vwap_yesterday and px_yesterday:
 						if vwap_yesterday < px_yesterday and vwap_today > px:
@@ -58,7 +58,7 @@ for stock in stocks:
 		results[(stock, period)] = test.results()		
 		'''
 		plt, subplots = multi_plot_data_with_dates(test.cube.get_dates(), 
-			[[test.cube.get_values(stock, 'adjclose'), test.i('VWAP-' + stock).as_series(), test.i('SMA-' + stock).as_series(), test.i('LSMA-' + stock).as_series(), test.i('BBandLower-' + stock).as_series(), test.i('BBandUpper-' + stock).as_series()],[test.i('RSMA-' + stock).as_series(), test.i('SSS-' + stock).as_series()],[test.i('ROC-' + stock).as_series()]],
+			[[test.cube.get_values(stock, 'close'), test.i('VWAP-' + stock).as_series(), test.i('SMA-' + stock).as_series(), test.i('LSMA-' + stock).as_series(), test.i('BBandLower-' + stock).as_series(), test.i('BBandUpper-' + stock).as_series()],[test.i('RSMA-' + stock).as_series(), test.i('SSS-' + stock).as_series()],[test.i('ROC-' + stock).as_series()]],
 			'Date',
 			['Price','Value', 'Value'],
 			'-',

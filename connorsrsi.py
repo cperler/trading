@@ -69,7 +69,7 @@ class Connors(Algorithm):
 						buy_px = min(buy_limit_px, h)
 						qty = int(self.cash / buy_px)
 						#qty = int(1000/buy_px)
-						print '{} buying {} at {}'.format(dt, qty, buy_px)
+						print('{} buying {} at {}'.format(dt, qty, buy_px))
 						self.oms.add(Transaction(symbol, dt, buy_px, qty))
 						self.cash = 0
 					#print '{} removing limit to buy {}'.format(dt, buy_limit_px)
@@ -77,10 +77,10 @@ class Connors(Algorithm):
 				elif entry_condition:
 					buy_limit_px = round(px * .92, 2)
 					self.buys[symbol] = buy_limit_px
-					print '{} setting limit px at {} - crsi={}'.format(dt, buy_limit_px, connors_rsi)
+					print('{} setting limit px at {} - crsi={}'.format(dt, buy_limit_px, connors_rsi))
 				elif symbol in self.oms.portfolio.positions and self.oms.portfolio.positions[symbol].amount > 0:
 					if exit_condition:
-						print '{} exiting {} at {} - crsi={}'.format(dt, self.oms.portfolio.positions[symbol].amount, px, connors_rsi)
+						print('{} exiting {} at {} - crsi={}'.format(dt, self.oms.portfolio.positions[symbol].amount, px, connors_rsi))
 						gains_cash = px * self.oms.portfolio.positions[symbol].amount
 						self.oms.add(Transaction(symbol, dt, px, -self.oms.portfolio.positions[symbol].amount))
 						self.cash += gains_cash
@@ -90,10 +90,10 @@ class Connors(Algorithm):
 test = Connors(stocks, '20110101', '20131127')
 test.run()
 test.results()
-
+print(test.cube)
 stock = stocks[0]
 plt, subplots = multi_plot_data_with_dates(test.cube.get_dates(), 
-	[[test.cube.get_values(stock, 'adjclose')], [test.i('ConnorsRSI-' + stock).as_series()], [test.i('ADX-'+stock).as_series()]], 
+	[[test.cube.get_values(stock, 'close')], [test.i('ConnorsRSI-' + stock).as_series()], [test.i('ADX-'+stock).as_series()]], 
 	'Date',
 	['Price', 'Value', 'Value'],
 	'-',

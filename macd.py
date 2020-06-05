@@ -13,6 +13,8 @@ stocks = ['SPY', 'VXX',
 #dow
 'AXP','BA','CAT','CSCO','CVX','DD','DIS','GE','GS','HD','IBM','INTC','JNJ','JPM','KO','MCD','MMM','MRK','MSFT','NKE','PFE','PG','T','TRV','UNH','UTX','V','VZ','WMT','XOM']
 
+stocks = ['SPY']
+
 class ADXTest(Algorithm):
 	def __init__(self, symbols, start_date, end_date):
 		super(ADXTest, self).__init__(symbols, start_date, end_date)		
@@ -22,7 +24,7 @@ class ADXTest(Algorithm):
 		super(ADXTest, self).pre_run()
 
 		for symbol in self.symbols:
-			close_series = self.cube.data[(symbol, 'adjclose')]
+			close_series = self.cube.data[(symbol, 'close')]
 			self.add_indicator(EMA('EMA12-'+symbol, close_series, 12))
 			self.add_indicator(EMA('EMA26-'+symbol, close_series, 26))
 			self.add_indicator(EMA('EMA55-'+symbol, close_series, 55))
@@ -42,7 +44,7 @@ class ADXTest(Algorithm):
 				ema26 = self.i('EMA26-'+symbol)[dt]
 				ema55 = self.i('EMA55-'+symbol)[dt]
 				
-				px = data[(symbol, 'adjclose')]
+				px = data[(symbol, 'close')]
 				
 				v_yesterday = None
 				v = None
@@ -53,7 +55,7 @@ class ADXTest(Algorithm):
 				if v_yesterday is not None:
 					if v < 2 and v > 0 and v_yesterday < 0 and v - v_yesterday > .25:
 						if dt == datetime.datetime(2014,1,17):
-							print dt, 'BUY', symbol
+							print(dt, 'BUY', symbol)
 						'''if symbol not in self.oms.portfolio.positions or not self.oms.portfolio.positions[symbol].is_open():
 							qty = 100 #int(self.cash / px)
 							self.oms.add(Transaction(symbol, dt, px, qty))
@@ -81,7 +83,7 @@ test.results()
 '''
 stock = stocks[0]
 plt, subplots = multi_plot_data_with_dates(test.cube.get_dates(), 
-									[[test.cube.get_values(stock, 'adjclose')],[test.i('MACD').as_series(), test.i('MACD_Signal').as_series()]],
+									[[test.cube.get_values(stock, 'close')],[test.i('MACD').as_series(), test.i('MACD_Signal').as_series()]],
 									'Date',
 									['Price','Value'],
 									'-',

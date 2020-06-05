@@ -17,7 +17,7 @@ class ADXTest(Algorithm):
 		for symbol in self.symbols:
 			high_series = self.cube.data[(symbol, 'high')]
 			low_series = self.cube.data[(symbol, 'low')]
-			close_series = self.cube.data[(symbol, 'adjclose')]
+			close_series = self.cube.data[(symbol, 'close')]
 			
 			self.add_indicator(TR('TR', high_series, low_series, close_series))
 			self.add_indicator(PlusDM('PlusDM', high_series, low_series))
@@ -41,10 +41,10 @@ class ADXTest(Algorithm):
 		pdi_y = self.i('PlusDI')[yesterday]
 		mdi = self.i('MinusDI')[dt]
 		mdi_y = self.i('MinusDI')[yesterday]
-		px = data[(symbol, 'adjclose')]
-		px_y = self.cube.data[(symbol, 'adjclose')][yesterday]
+		px = data[(symbol, 'close')]
+		px_y = self.cube.data[(symbol, 'close')][yesterday]
 		
-		if adx > 25:
+		if adx and adx > 25:
 			if pdi > mdi and pdi_y < mdi_y:
 				if symbol not in self.oms.portfolio.positions or not self.oms.portfolio.positions[symbol].is_open():						
 					self.oms.add(Transaction(symbol, dt, px, 500))

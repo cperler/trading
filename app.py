@@ -15,7 +15,7 @@ class SMATest(Algorithm):
 		super(SMATest, self).pre_run()
 
 		for symbol in self.symbols:
-			close_series = self.cube.data[(symbol, 'adjclose')]
+			close_series = self.cube.data[(symbol, 'close')]
 			self.add_indicator(SMA('ShortSMA-' + symbol, close_series, 5))
 			self.add_indicator(SMA('LongSMA-' + symbol, close_series, 20))
 			self.add_indicator(RSMA('LongRSMA-' + symbol, close_series, 20))
